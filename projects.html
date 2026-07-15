@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Mohd Faizan Usmani</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href ="css/project.css">
+<link rel="stylesheet" href ="css/index.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <div class="eyebrow">Full project archive</div>
+    <h1>All Projects</h1>
+    <p>Every project I've built so far, with source code on GitHub. These are <strong>code repositories, not hosted live demos</strong> — click "View Code" to see the full source, README, and commit history.</p>
+  </div>
+
+  <section>
+    <div class="proj-grid">
+
+      <div class="proj-card stagger">
+        <div class="proj-top">
+          <div class="proj-name">Student Management System</div>
+          <span class="status-badge status-live">Complete</span>
+        </div>
+        <div class="proj-desc">A console-based Student Management System built in C, using structured programming to manage student records — covers structs, file handling, and array-based data storage. Designed as a beginner-friendly project to practice how real-world data can be modeled and manipulated using core C concepts.</div>
+        <div class="tech-tags"><span class="tech-tag">C</span><span class="tech-tag">File I/O</span><span class="tech-tag">Structs</span><span class="tech-tag">Console App</span></div>
+        <div class="proj-actions">
+          <a class="btn btn-code" href="https://github.com/faizanusmani20" target="_blank" rel="noopener">↗ View Code on GitHub</a>
+        </div>
+      </div>
+
+      <div class="proj-card stagger">
+        <div class="proj-top">
+          <div class="proj-name">Data Cleaning Toolkit</div>
+          <span class="status-badge status-progress">In Progress</span>
+        </div>
+        <div class="proj-desc">A Python + Pandas script to clean, transform, and summarize a messy CSV dataset. Handles missing values, type conversion, and produces summary statistics — a foundational project for a data analyst portfolio.</div>
+        <div class="tech-tags"><span class="tech-tag">Python</span><span class="tech-tag">Pandas</span></div>
+        <div class="proj-actions">
+          <a class="btn btn-code" href="https://github.com/faizanusmani20" target="_blank" rel="noopener">↗ View Code on GitHub</a>
+        </div>
+      </div>
+
+      <div class="proj-card stagger">
+        <div class="proj-top">
+          <div class="proj-name">Java DSA Practice</div>
+          <span class="status-badge status-progress">In Progress</span>
+        </div>
+        <div class="proj-desc">Core data structures and algorithms implemented in Java — arrays, linked lists, stacks, queues, and sorting/searching algorithms — building interview-ready fundamentals.</div>
+        <div class="tech-tags"><span class="tech-tag">Java</span><span class="tech-tag">DSA</span></div>
+        <div class="proj-actions">
+          <a class="btn btn-code" href="https://github.com/faizanusmani20" target="_blank" rel="noopener">↗ View Code on GitHub</a>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="back-cta"><a href="index.html">← Back to home</a></p>
+  </section>
+
+</main>
+
+<footer>© 2026 Mohd Faizan Usmani</footer>
+
+<script src="common.js"></script>
+<script>
+  const revealEls = document.querySelectorAll('.stagger');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

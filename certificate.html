@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificates — Mohd Faizan Usmani</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/certificate.css">
+<link rel="stylesheet" href="css/index.css">
+
+
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <div class="eyebrow">Verified learning</div>
+    <h1>Certificates</h1>
+    <p>Courses, workshops, and credentials I've completed. Each card links to the certificate image and, where available, a public verification link.</p>
+  </div>
+
+  <section>
+    <!--
+      ============================================================
+      HOW TO ADD A NEW CERTIFICATE
+      1. Put your certificate image in images/certificates/
+         (e.g. images/certificates/python-basics.jpg)
+      2. Copy the <div class="cert-card">...</div> block below
+      3. Paste it inside <div class="cert-grid"> ... </div>
+      4. Edit: image src, cert-name, cert-issuer, cert-date,
+         cert-desc, and the verify link href
+      That's it — no other file needs to change.
+      ============================================================
+    -->
+    <div class="cert-grid">
+
+
+    <div class="cert-card stagger">
+        <div class="cert-img-wrap">
+          <img src="images/certificates/Java Programming for Beginners.png" alt="Java Programming for Beginners.png">
+        </div>
+        <div class="cert-body">
+          <div class="cert-name">Java Programming for Beginners</div>
+          <div class="cert-issuer">Simplilearn</div>
+          <div class="cert-date">Issued July 2026</div>
+          <div class="cert-desc">This Certificate of Completion is awarded to Mohd Faizan Usmani for successfully completing 
+            the Java Programming for Beginners online course. It recognizes the recipient's dedication, initiative, and commitment 
+            to developing programming skills and advancing their professional career. 
+          </div>
+          <div class="cert-actions">
+            <a class="btn btn-code" href="images/certificates/Java Programming for Beginners.svg" target="_blank" rel="noopener">↗ View Certificate</a>
+          </div>
+        </div>
+      </div>
+
+
+
+
+      <div class="cert-card stagger">
+        <div class="cert-img-wrap">
+          <img src="images/certificates/Basics of Python.png" alt="Basics of Python">
+        </div>
+        <div class="cert-body">
+          <div class="cert-name">Basics of Python</div>
+          <div class="cert-issuer">uniathena</div>
+          <div class="cert-date">Issued July 2026</div>
+          <div class="cert-desc">This Certificate cover all the basics of python. </div>
+          <div class="cert-actions">
+            <a class="btn btn-code" href="images/certificates/Basics of Python.svg" target="_blank" rel="noopener">↗ View Certificate</a>
+          </div>
+        </div>
+      </div>
+
+      
+
+    </div>
+    <p class="back-cta"><a href="index.html">← Back to home</a></p>
+  </section>
+
+</main>
+
+<footer>© 2026 Mohd Faizan Usmani</footer>
+
+<script src="common.js"></script>
+<script>
+  const revealEls = document.querySelectorAll('.stagger');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+/* Active navigation */
+nav.topnav a.active{
+    color: var(--text);
+}
+
+nav.topnav a:hover::after,
+nav.topnav a.active::after{
+    width: 100%;
+}
+
+/* Page Header */
+.page-head{
+    padding:64px 0 40px;
+}
+
+.page-head h1{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(30px,5vw,44px);
+    letter-spacing:-1px;
+    margin-bottom:14px;
+}
+
+.page-head p{
+    color:var(--text-dim);
+    font-size:16px;
+    max-width:600px;
+}
+
+.page-head p strong{
+    color:var(--text);
+    font-weight:600;
+}
+
+/* Section */
+section{
+    padding-bottom:70px;
+}
+
+/* Project Cards */
+.proj-name{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:18px;
+}
+
+/* Different spacing from index.css */
+.tech-tags{
+    margin-bottom:18px;
+}
+
+/* Project Buttons */
+.proj-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:7px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    transition:all .15s ease;
+}
+
+.btn-code{
+    background:var(--bg-alt);
+    color:var(--text);
+    border:1px solid var(--border);
+}
+
+.btn-code:hover{
+    border-color:var(--blue);
+    color:var(--blue);
+    text-decoration:none;
+}
+
+.btn-disabled{
+    background:var(--bg-alt);
+    color:var(--text-faint);
+    border:1px solid var(--border);
+    cursor:default;
+    opacity:.7;
+}
+
+.btn-disabled:hover{
+    text-decoration:none;
+}
+
+.code-note{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    margin-top:2px;
+}
+
+.back-cta{
+    margin-top:10px;
+}
