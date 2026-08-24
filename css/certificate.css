@@ -240,3 +240,25 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Space Background Setup */
+body {
+    background-color: #050505; /* Deep space black */
+    overflow-x: hidden;
+}
+
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Stays behind content */
+    pointer-events: none; /* Allows clicks to pass through */
+}
+
+/* Optional: Add a subtle glow to the canvas container if needed */
+#bg-canvas {
+    filter: brightness(1.1);
+}

@@ -1,149 +1,207 @@
-    /**
-     * WORMHOLE / WARP SPEED STARFIELD
-     * Creates a stunning tunnel effect with trails and depth.
-     */
-    (function() {
-        const canvas = document.getElementById('bg-canvas');
-        if (!canvas) return; // Safety check
-        const ctx = canvas.getContext('2d');
+/**
+ * Space Background Animation
+ * Features: Central Sun, Orbiting Planets, Moons, and Starfield
+ */
 
-        let width, height;
-        let particles = [];
-        let animationId;
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
 
-        // CONFIGURATION
-        const CONFIG = {
-            particleCount: 1200,       // Number of stars
-            speed: 2.5,                // Base speed (lower = slower)
-            speedBoost: 15,            // Speed when "warping"
-            starSize: 2.5,             // Base size
-            trailLength: 0.2,          // Trail fading (0.0 = long trails, 1.0 = no trails)
-            depth: 1000,               // Total depth of the tunnel
-            fov: 300,                  // Field of view (lower = more intense tunnel)
-            colorBase: { r: 200, g: 220, b: 255 }, // White/Blue tint
-            colorDeep: { r: 150, g: 180, b: 255 }, // Deep blue tint for distance
-            warpThreshold: 0.8         // When to trigger warp effect
-        };
+let width, height;
+let stars = [];
+let planets = [];
 
-        // Resize handler
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            // Reset center
-            center.x = width / 2;
-            center.y = height / 2;
+// Configuration
+const config = {
+    starCount: 150,
+    planetCount: 4,
+    sunColor: '#ffcc00',
+    sunGlow: 'rgba(255, 200, 0, 0.4)',
+    orbitColor: 'rgba(255, 255, 255, 0.1)',
+    speeds: {
+        rotation: 0.002,
+        planetBase: 0.005
+    }
+};
+
+// Resize handler
+function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    initStars();
+    initPlanets();
+}
+
+// Star Class
+class Star {
+    constructor() {
+        this.reset();
+    }
+
+    reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.size = Math.random() * 1.5;
+        this.opacity = Math.random();
+        this.fadeSpeed = 0.005 + Math.random() * 0.01;
+        this.fadingIn = true;
+    }
+
+    update() {
+        if (this.fadingIn) {
+            this.opacity += this.fadeSpeed;
+            if (this.opacity >= 1) this.fadingIn = false;
+        } else {
+            this.opacity -= this.fadeSpeed;
+            if (this.opacity <= 0.2) this.fadingIn = true;
         }
+    }
 
-        const center = { x: 0, y: 0 };
-        window.addEventListener('resize', resize);
-        resize();
+    draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
 
-        // Particle Class
-        class Star {
-            constructor() {
-                this.reset(true);
-            }
+// Planet Class
+class Planet {
+    constructor(index, total) {
+        this.index = index;
+        this.total = total;
+        this.reset();
+    }
 
-            reset(randomStart = false) {
-                // Random position in 3D space
-                // x, y are spread wide, z is depth
-                this.x = (Math.random() - 0.5) * width * 3;
-                this.y = (Math.random() - 0.5) * height * 3;
-                this.z = randomStart ? Math.random() * CONFIG.depth : CONFIG.depth;
+    reset() {
+        this.angle = (Math.PI * 2 / this.total) * this.index + Math.random();
+        this.distance = 60 + (this.index * 45) + Math.random() * 20;
+        this.size = 3 + Math.random() * 5;
+        this.speed = config.speeds.planetBase * (0.5 + Math.random() * 0.5) * (Math.random() > 0.5 ? 1 : -1);
 
-                // Random speed variation
-                this.baseSpeed = CONFIG.speed * (0.8 + Math.random() * 0.4);
+        const colors = ['#5b9dff', '#ff6b6b', '#a855f7', '#2dd4bf', '#fbbf24'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
 
-                // Visual properties
-                this.size = Math.random() * CONFIG.starSize;
-                this.alpha = Math.random() * 0.5 + 0.3;
-            }
-
-            update(warping) {
-                // Move closer to camera
-                const currentSpeed = warping ? CONFIG.speedBoost : this.baseSpeed;
-                this.z -= currentSpeed;
-
-                // Reset if it passes the camera
-                if (this.z <= 0) {
-                    this.reset();
-                    this.z = CONFIG.depth;
-                }
-            }
-
-            draw() {
-                // 3D Projection Formula
-                const scale = CONFIG.fov / (CONFIG.fov + this.z);
-
-                // Project 3D point to 2D screen
-                const x2d = (this.x * scale) + center.x;
-                const y2d = (this.y * scale) + center.y;
-
-                // Calculate size based on depth
-                const currentSize = this.size * scale * 4;
-
-                // Calculate color based on depth (closer = brighter, further = bluer)
-                const distRatio = this.z / CONFIG.depth;
-                const r = Math.min(255, CONFIG.colorBase.r + (CONFIG.colorDeep.r - CONFIG.colorBase.r) * (1 - distRatio));
-                const g = Math.min(255, CONFIG.colorBase.g + (CONFIG.colorDeep.g - CONFIG.colorBase.g) * (1 - distRatio));
-                const b = Math.min(255, CONFIG.colorBase.b + (CONFIG.colorDeep.b - CONFIG.colorBase.b) * (1 - distRatio));
-
-                // Opacity increases as it gets closer
-                const opacity = Math.min(1, (1 - distRatio) * this.alpha + 0.2);
-
-                // Draw the star
-                if (x2d >= 0 && x2d <= width && y2d >= 0 && y2d <= height) {
-                    ctx.beginPath();
-                    ctx.arc(x2d, y2d, Math.max(0.1, currentSize), 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    ctx.fill();
-                }
-            }
+        this.hasMoon = Math.random() > 0.4;
+        if (this.hasMoon) {
+            this.moonDistance = this.size + 8 + Math.random() * 10;
+            this.moonSize = 1 + Math.random() * 1.5;
+            this.moonAngle = Math.random() * Math.PI * 2;
+            this.moonSpeed = this.speed * 3;
         }
+    }
 
-        // Initialize particles
-        function init() {
-            particles = [];
-            for (let i = 0; i < CONFIG.particleCount; i++) {
-                particles.push(new Star());
-            }
+    update() {
+        this.angle += this.speed;
+        if (this.hasMoon) {
+            this.moonAngle += this.moonSpeed;
         }
+    }
 
-        // Animation Loop
-        function animate() {
-            // Create trails by not clearing the canvas completely
-            // Using a semi-transparent fill creates the "trail" effect
-            ctx.fillStyle = `rgba(5, 5, 10, ${CONFIG.trailLength})`;
-            ctx.fillRect(0, 0, width, height);
+    draw() {
+        const centerX = width / 2;
+        const centerY = height / 2;
 
-            // Check for warp state (could be mouse movement, scroll, or button)
-            // For now, we'll simulate a constant gentle warp
-            const warping = false; // Change to true to force warp mode
+        const x = centerX + Math.cos(this.angle) * this.distance;
+        const y = centerY + Math.sin(this.angle) * this.distance;
 
-            particles.forEach(p => {
-                p.update(warping);
-                p.draw();
-            });
+        // Draw Orbit Path
+        ctx.beginPath();
+        ctx.strokeStyle = config.orbitColor;
+        ctx.lineWidth = 1;
+        ctx.arc(centerX, centerY, this.distance, 0, Math.PI * 2);
+        ctx.stroke();
 
-            animationId = requestAnimationFrame(animate);
+        // Draw Planet
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(x, y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Draw Moon
+        if (this.hasMoon) {
+            const moonX = x + Math.cos(this.moonAngle) * this.moonDistance;
+            const moonY = y + Math.sin(this.moonAngle) * this.moonDistance;
+
+            ctx.fillStyle = '#cccccc';
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, this.moonSize, 0, Math.PI * 2);
+            ctx.fill();
         }
+    }
+}
 
-        // Start
-        init();
-        animate();
+// Sun Drawing Function (No variable declaration conflict)
+function drawSun() {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const sunRadius = 25;
 
-        // Optional: Add a "Warp" effect on mouse move
-        let mouseX = 0, mouseY = 0;
-        document.addEventListener('mousemove', (e) => {
-            const x = e.clientX - width / 2;
-            const y = e.clientY - height / 2;
-            // Scale mouse movement to affect particles slightly
-            particles.forEach(p => {
-                p.x += x * 0.0001;
-                p.y += y * 0.0001;
-            });
-        });
+    // Sun Glow
+    const gradient = ctx.createRadialGradient(centerX, centerY, sunRadius * 0.2, centerX, centerY, sunRadius * 2.5);
+    gradient.addColorStop(0, config.sunColor);
+    gradient.addColorStop(0.4, config.sunGlow);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
-    })();
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, sunRadius * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Solid Sun Core
+    ctx.fillStyle = config.sunColor;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = config.sunColor;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, sunRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+// Initialization
+function initStars() {
+    stars = [];
+    for (let i = 0; i < config.starCount; i++) {
+        stars.push(new Star());
+    }
+}
+
+function initPlanets() {
+    planets = [];
+    for (let i = 0; i < config.planetCount; i++) {
+        planets.push(new Planet(i, config.planetCount));
+    }
+}
+
+// Animation Loop
+function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw Stars
+    stars.forEach(star => {
+        star.update();
+        star.draw();
+    });
+
+    // Draw Sun
+    drawSun();
+
+    // Draw Planets
+    planets.forEach(planet => {
+        planet.update();
+        planet.draw();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+// Event Listeners
+window.addEventListener('resize', resize);
+
+// Start
+resize();
+animate();
