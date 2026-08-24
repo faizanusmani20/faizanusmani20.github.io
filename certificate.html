@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Certificates — Mohd Faizan Usmani</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href ="css/common.css">
 <link rel="stylesheet" href="css/certificate.css">
-<link rel="stylesheet" href="css/index.css">
+
 
 
 </head>
 <body>
+
+<canvas id="bg-canvas"></canvas>
 
 <div id="site-header"></div>
 
@@ -46,9 +46,9 @@
           <div class="cert-name">Java Programming for Beginners</div>
           <div class="cert-issuer">Simplilearn</div>
           <div class="cert-date">Issued July 2026</div>
-          <div class="cert-desc">This Certificate of Completion is awarded to Mohd Faizan Usmani for successfully completing 
-            the Java Programming for Beginners online course. It recognizes the recipient's dedication, initiative, and commitment 
-            to developing programming skills and advancing their professional career. 
+          <div class="cert-desc">This Certificate of Completion is awarded to Mohd Faizan Usmani for successfully completing
+            the Java Programming for Beginners online course. It recognizes the recipient's dedication, initiative, and commitment
+            to developing programming skills and advancing their professional career.
           </div>
           <div class="cert-actions">
             <a class="btn btn-code" href="images/certificates/Java Programming for Beginners.svg" target="_blank" rel="noopener">↗ View Certificate</a>
@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      
+
 
     </div>
     <p class="back-cta"><a href="index.html">← Back to home</a></p>
@@ -112,5 +112,6 @@
   }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
   revealEls.forEach(el => io.observe(el));
 </script>
+<script src="script.js"></script>
 </body>
 </html>
