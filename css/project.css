@@ -1,104 +1,243 @@
-/* Active navigation */
-nav.topnav a.active{
-    color: var(--text);
+/* --- Global & Canvas Setup --- */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #050505;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
 }
 
-nav.topnav a:hover::after,
-nav.topnav a.active::after{
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
 }
 
-/* Page Header */
-.page-head{
-    padding:64px 0 40px;
+#site-header {
+    /* Ensure header is above canvas but below content if needed,
+       usually header is fixed or static. Adjust z-index if header overlaps. */
+    position: relative;
+    z-index: 10;
 }
 
-.page-head h1{
-    font-family:var(--display);
-    font-weight:700;
-    font-size:clamp(30px,5vw,44px);
-    letter-spacing:-1px;
-    margin-bottom:14px;
+main.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    position: relative;
+    z-index: 1;
 }
 
-.page-head p{
-    color:var(--text-dim);
-    font-size:16px;
-    max-width:600px;
+/* --- Page Header --- */
+.page-head {
+    margin-bottom: 4rem;
+    text-align: center;
 }
 
-.page-head p strong{
-    color:var(--text);
-    font-weight:600;
+.page-head .eyebrow {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #5b9dff;
+    margin-bottom: 1rem;
+    font-weight: 600;
 }
 
-/* Section */
-section{
-    padding-bottom:70px;
+.page-head h1 {
+    font-size: 3rem;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    letter-spacing: -1px;
 }
 
-/* Project Cards */
-.proj-name{
-    font-family:var(--display);
-    font-weight:600;
-    font-size:18px;
+.page-head p {
+    font-size: 1.1rem;
+    color: #a0a0a0;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
 }
 
-/* Different spacing from index.css */
-.tech-tags{
-    margin-bottom:18px;
+/* --- Project Grid --- */
+.proj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 3rem;
 }
 
-/* Project Buttons */
-.proj-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+/* --- Project Card --- */
+.proj-card {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+
+    /* Animation Initial State */
+    opacity: 0;
+    transform: translateY(30px);
 }
 
-.btn{
-    font-family:var(--sans);
-    font-size:13.5px;
-    font-weight:600;
-    padding:9px 16px;
-    border-radius:7px;
-    display:inline-flex;
-    align-items:center;
-    gap:7px;
-    transition:all .15s ease;
+.proj-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-.btn-code{
-    background:var(--bg-alt);
-    color:var(--text);
-    border:1px solid var(--border);
+.proj-card:hover {
+    transform: translateY(-5px);
+    border-color: #5b9dff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-.btn-code:hover{
-    border-color:var(--blue);
-    color:var(--blue);
-    text-decoration:none;
+.proj-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
-.btn-disabled{
-    background:var(--bg-alt);
-    color:var(--text-faint);
-    border:1px solid var(--border);
-    cursor:default;
-    opacity:.7;
+.proj-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
 }
 
-.btn-disabled:hover{
-    text-decoration:none;
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.code-note{
-    font-family:var(--mono);
-    font-size:12px;
-    color:var(--text-faint);
-    margin-top:2px;
+.status-live {
+    background: rgba(91, 157, 255, 0.2);
+    color: #5b9dff;
+    border: 1px solid rgba(91, 157, 255, 0.4);
 }
 
-.back-cta{
-    margin-top:10px;
+.status-progress {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.proj-desc {
+    font-size: 0.95rem;
+    color: #b0b0b0;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tech-tag {
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ddd;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.proj-actions {
+    margin-top: auto;
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: #5b9dff;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #4a8bc9;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-code {
+    background: transparent;
+    color: #5b9dff;
+    border: 1px solid #5b9dff;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+}
+
+.btn-code:hover {
+    background: rgba(91, 157, 255, 0.1);
+}
+
+/* --- Footer & Back Link --- */
+.back-cta {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.back-cta a {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.back-cta a:hover {
+    color: #fff;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 2rem;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .page-head h1 {
+        font-size: 2.2rem;
+    }
+    .proj-grid {
+        grid-template-columns: 1fr;
+    }
 }

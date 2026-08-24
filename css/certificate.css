@@ -1,80 +1,242 @@
-/* Certificate Grid */
-.cert-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:20px;
-}
-@media (max-width:700px){
-    .cert-grid{ grid-template-columns:1fr; }
-}
-
-.cert-card{
-    border:1px solid var(--border);
-    border-radius:10px;
-    background:var(--card);
-    overflow:hidden;
-    transition:border-color .15s ease, transform .15s ease;
-}
-.cert-card:hover{
-    border-color:#39424f;
-    transform:translateY(-2px);
+/* --- Global & Canvas Setup --- */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #050505;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
 }
 
-.cert-img-wrap{
-    width:100%;
-    aspect-ratio: 4 / 2.83;
-    background:var(--bg-alt);
-    border-bottom:1px solid var(--border);
-    overflow:hidden;
-}
-.cert-img-wrap img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
 }
 
-.cert-body{
-    padding:18px 20px 20px;
+#site-header {
+    position: relative;
+    z-index: 10;
 }
 
-.cert-name{
-    font-family:var(--display);
-    font-weight:600;
-    font-size:16.5px;
-    margin-bottom:4px;
+main.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    position: relative;
+    z-index: 1;
 }
 
-.cert-issuer{
-    color:var(--blue);
-    font-size:13px;
-    margin-bottom:2px;
+/* --- Page Header --- */
+.page-head {
+    margin-bottom: 4rem;
+    text-align: center;
 }
 
-.cert-date{
-    font-family:var(--mono);
-    font-size:11.5px;
-    color:var(--text-faint);
-    margin-bottom:10px;
+.page-head .eyebrow {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #5b9dff;
+    margin-bottom: 1rem;
+    font-weight: 600;
 }
 
-.cert-desc{
-    color:var(--text-dim);
-    font-size:13.5px;
-    margin-bottom:14px;
+.page-head h1 {
+    font-size: 3rem;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    letter-spacing: -1px;
 }
 
-.cert-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+.page-head p {
+    font-size: 1.1rem;
+    color: #a0a0a0;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
 }
 
-.empty-state{
-    border:1px dashed var(--border);
-    border-radius:10px;
-    padding:40px 20px;
-    text-align:center;
-    color:var(--text-faint);
-    font-size:14px;
+/* --- Certificate Grid --- */
+.cert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+/* --- Certificate Card --- */
+.cert-card {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+
+    /* Animation Initial State */
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.cert-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.cert-card:hover {
+    transform: translateY(-5px);
+    border-color: #5b9dff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Image Wrapper --- */
+.cert-img-wrap {
+    width: 100%;
+    height: 200px; /* Fixed height for consistency */
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cert-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures image fills the area without stretching */
+    transition: transform 0.5s ease;
+}
+
+.cert-card:hover .cert-img-wrap img {
+    transform: scale(1.05);
+}
+
+/* --- Card Body --- */
+.cert-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cert-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.cert-issuer {
+    font-size: 0.9rem;
+    color: #5b9dff;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.cert-date {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.cert-desc {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.cert-actions {
+    margin-top: auto;
+}
+
+/* --- Buttons (Shared with projects.css but redefined for safety) --- */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: #5b9dff;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #4a8bc9;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-code {
+    background: transparent;
+    color: #5b9dff;
+    border: 1px solid #5b9dff;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+}
+
+.btn-code:hover {
+    background: rgba(91, 157, 255, 0.1);
+}
+
+/* --- Footer & Back Link --- */
+.back-cta {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.back-cta a {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.back-cta a:hover {
+    color: #fff;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 2rem;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .page-head h1 {
+        font-size: 2.2rem;
+    }
+    .cert-grid {
+        grid-template-columns: 1fr;
+    }
 }
