@@ -1,92 +1,149 @@
-const canvas = document.getElementById('bg-canvas');
-const ctx = canvas.getContext('2d');
+    /**
+     * WORMHOLE / WARP SPEED STARFIELD
+     * Creates a stunning tunnel effect with trails and depth.
+     */
+    (function() {
+        const canvas = document.getElementById('bg-canvas');
+        if (!canvas) return; // Safety check
+        const ctx = canvas.getContext('2d');
 
-let width, height;
-let particles = [];
+        let width, height;
+        let particles = [];
+        let animationId;
 
-// Configuration
-const PARTICLE_COUNT = 800;
-const SPEED = 2; // How fast they fall
-const STAR_SIZE = 2;
-const FIELD_OF_VIEW = 600; // Controls the "zoom" intensity
+        // CONFIGURATION
+        const CONFIG = {
+            particleCount: 1200,       // Number of stars
+            speed: 2.5,                // Base speed (lower = slower)
+            speedBoost: 15,            // Speed when "warping"
+            starSize: 2.5,             // Base size
+            trailLength: 0.2,          // Trail fading (0.0 = long trails, 1.0 = no trails)
+            depth: 1000,               // Total depth of the tunnel
+            fov: 300,                  // Field of view (lower = more intense tunnel)
+            colorBase: { r: 200, g: 220, b: 255 }, // White/Blue tint
+            colorDeep: { r: 150, g: 180, b: 255 }, // Deep blue tint for distance
+            warpThreshold: 0.8         // When to trigger warp effect
+        };
 
-// Resize canvas to fill window
-function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-}
-
-window.addEventListener('resize', resize);
-resize();
-
-class Particle {
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        // Start at random X, Y but deep in Z space
-        this.x = (Math.random() - 0.5) * width * 2;
-        this.y = (Math.random() - 0.5) * height * 2;
-        this.z = Math.random() * FIELD_OF_VIEW + FIELD_OF_VIEW; // Start far away
-        this.pz = this.z; // Previous Z for trail effect (optional)
-    }
-
-    update() {
-        // Move particle closer (decrease Z)
-        this.z -= SPEED;
-
-        // If it passes the camera (z <= 0), reset it to the back
-        if (this.z <= 1) {
-            this.reset();
-            this.z = FIELD_OF_VIEW;
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            // Reset center
+            center.x = width / 2;
+            center.y = height / 2;
         }
-    }
 
-    draw() {
-        // Perspective projection math
-        // Scale = FOV / (FOV + Z)
-        const scale = FIELD_OF_VIEW / (FIELD_OF_VIEW + this.z);
+        const center = { x: 0, y: 0 };
+        window.addEventListener('resize', resize);
+        resize();
 
-        const x2d = (this.x * scale) + width / 2;
-        const y2d = (this.y * scale) + height / 2;
+        // Particle Class
+        class Star {
+            constructor() {
+                this.reset(true);
+            }
 
-        // Calculate size based on depth (closer = bigger)
-        const size = STAR_SIZE * (1 - scale) * 4;
+            reset(randomStart = false) {
+                // Random position in 3D space
+                // x, y are spread wide, z is depth
+                this.x = (Math.random() - 0.5) * width * 3;
+                this.y = (Math.random() - 0.5) * height * 3;
+                this.z = randomStart ? Math.random() * CONFIG.depth : CONFIG.depth;
 
-        // Opacity based on depth (fading in as they come closer)
-        const alpha = Math.min(1, (FIELD_OF_VIEW - this.z) / (FIELD_OF_VIEW / 2));
+                // Random speed variation
+                this.baseSpeed = CONFIG.speed * (0.8 + Math.random() * 0.4);
 
-        if (x2d < 0 || x2d > width || y2d < 0 || y2d > height) return;
+                // Visual properties
+                this.size = Math.random() * CONFIG.starSize;
+                this.alpha = Math.random() * 0.5 + 0.3;
+            }
 
-        ctx.beginPath();
-        ctx.arc(x2d, y2d, Math.max(0.1, size), 0, Math.PI * 2);
+            update(warping) {
+                // Move closer to camera
+                const currentSpeed = warping ? CONFIG.speedBoost : this.baseSpeed;
+                this.z -= currentSpeed;
 
-        // Color: White with blueish tint for sci-fi feel, or pure white
-        ctx.fillStyle = `rgba(200, 230, 255, ${alpha})`;
-        ctx.fill();
-    }
-}
+                // Reset if it passes the camera
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = CONFIG.depth;
+                }
+            }
 
-// Initialize particles
-for (let i = 0; i < PARTICLE_COUNT; i++) {
-    particles.push(new Particle());
-}
+            draw() {
+                // 3D Projection Formula
+                const scale = CONFIG.fov / (CONFIG.fov + this.z);
 
-function animate() {
-    // Clear screen with a slight fade for motion blur effect (optional)
-    // Remove the second argument (0.2) and use 'clearRect' for crisp movement
-    ctx.fillStyle = 'rgba(5, 5, 5, 0.4)';
-    ctx.fillRect(0, 0, width, height);
+                // Project 3D point to 2D screen
+                const x2d = (this.x * scale) + center.x;
+                const y2d = (this.y * scale) + center.y;
 
-    particles.forEach(p => {
-        p.update();
-        p.draw();
-    });
+                // Calculate size based on depth
+                const currentSize = this.size * scale * 4;
 
-    requestAnimationFrame(animate);
-}
+                // Calculate color based on depth (closer = brighter, further = bluer)
+                const distRatio = this.z / CONFIG.depth;
+                const r = Math.min(255, CONFIG.colorBase.r + (CONFIG.colorDeep.r - CONFIG.colorBase.r) * (1 - distRatio));
+                const g = Math.min(255, CONFIG.colorBase.g + (CONFIG.colorDeep.g - CONFIG.colorBase.g) * (1 - distRatio));
+                const b = Math.min(255, CONFIG.colorBase.b + (CONFIG.colorDeep.b - CONFIG.colorBase.b) * (1 - distRatio));
 
-animate();
+                // Opacity increases as it gets closer
+                const opacity = Math.min(1, (1 - distRatio) * this.alpha + 0.2);
+
+                // Draw the star
+                if (x2d >= 0 && x2d <= width && y2d >= 0 && y2d <= height) {
+                    ctx.beginPath();
+                    ctx.arc(x2d, y2d, Math.max(0.1, currentSize), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Initialize particles
+        function init() {
+            particles = [];
+            for (let i = 0; i < CONFIG.particleCount; i++) {
+                particles.push(new Star());
+            }
+        }
+
+        // Animation Loop
+        function animate() {
+            // Create trails by not clearing the canvas completely
+            // Using a semi-transparent fill creates the "trail" effect
+            ctx.fillStyle = `rgba(5, 5, 10, ${CONFIG.trailLength})`;
+            ctx.fillRect(0, 0, width, height);
+
+            // Check for warp state (could be mouse movement, scroll, or button)
+            // For now, we'll simulate a constant gentle warp
+            const warping = false; // Change to true to force warp mode
+
+            particles.forEach(p => {
+                p.update(warping);
+                p.draw();
+            });
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Start
+        init();
+        animate();
+
+        // Optional: Add a "Warp" effect on mouse move
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX - width / 2;
+            const y = e.clientY - height / 2;
+            // Scale mouse movement to affect particles slightly
+            particles.forEach(p => {
+                p.x += x * 0.0001;
+                p.y += y * 0.0001;
+            });
+        });
+
+    })();
