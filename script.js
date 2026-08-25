@@ -480,60 +480,61 @@ resize();
 requestAnimationFrame(animate);
 
 /* =========================================================
-   ASTRONOMY CURSOR
-   Professional stellar cursor + comet trail
+   MINIMAL ASTRONOMY CURSOR
    ========================================================= */
 
 const CURSOR_CONFIG = {
     enabled: true,
 
-    // Easy to change later
-    color: "#b9dcff",
-    glow: "rgba(100, 190, 255, 0.55)",
-    trailColor: "rgba(150, 220, 255, 0.9)",
+    // Main appearance
+    color: "#dcecff",
+    ringColor: "rgba(180, 215, 255, 0.65)",
+    trailColor: "rgba(160, 205, 255, 0.35)",
 
-    // Size and animation
-    cursorSize: 22,
-    trailSize: 5,
-    trailCount: 18,
-    trailLife: 520,
-    smoothness: 0.22
+    // Cursor size
+    size: 5,
+    ringSize: 11,
+
+    // Trail
+    trailLength: 12,
+    trailLife: 280,
+
+    // Movement smoothing
+    smoothness: 0.18
 };
 
 
-/* ---------------------------------------------------------
-   Stop here if cursor effect is disabled
-   --------------------------------------------------------- */
+if (
+    CURSOR_CONFIG.enabled &&
+    !("ontouchstart" in window)
+) {
 
-if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
-
-    // -----------------------------------------------------
-    // Create cursor canvas
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Cursor Canvas
+       ----------------------------------------------------- */
 
     const cursorCanvas = document.createElement("canvas");
 
-    cursorCanvas.id = "astronomy-cursor";
+    cursorCanvas.id = "minimal-astronomy-cursor";
 
     Object.assign(cursorCanvas.style, {
         position: "fixed",
-        top: "0",
-        left: "0",
+        inset: "0",
         width: "100vw",
         height: "100vh",
         pointerEvents: "none",
-        zIndex: "999999",
-        overflow: "hidden"
+        zIndex: "999999"
     });
 
     document.body.appendChild(cursorCanvas);
 
-    const cursorCtx = cursorCanvas.getContext("2d");
+    const cursorCtx =
+        cursorCanvas.getContext("2d");
 
 
-    // -----------------------------------------------------
-    // Cursor state
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Cursor State
+       ----------------------------------------------------- */
 
     let cursorWidth = window.innerWidth;
     let cursorHeight = window.innerHeight;
@@ -544,120 +545,149 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
     let cursorX = mouseX;
     let cursorY = mouseY;
 
-    let isMouseMoving = false;
-    let mouseDown = false;
+    let lastMouseX = mouseX;
+    let lastMouseY = mouseY;
+
+    let isMoving = false;
+    let lastMovementTime = 0;
 
     const trail = [];
 
 
-    // -----------------------------------------------------
-    // Resize
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Resize
+       ----------------------------------------------------- */
 
-    function resizeAstronomyCursor() {
+    function resizeCursor() {
 
         cursorWidth = window.innerWidth;
         cursorHeight = window.innerHeight;
 
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr =
+            Math.min(window.devicePixelRatio || 1, 2);
 
-        cursorCanvas.width = cursorWidth * pixelRatio;
-        cursorCanvas.height = cursorHeight * pixelRatio;
+        cursorCanvas.width =
+            cursorWidth * dpr;
 
-        cursorCanvas.style.width = `${cursorWidth}px`;
-        cursorCanvas.style.height = `${cursorHeight}px`;
+        cursorCanvas.height =
+            cursorHeight * dpr;
+
+        cursorCanvas.style.width =
+            `${cursorWidth}px`;
+
+        cursorCanvas.style.height =
+            `${cursorHeight}px`;
 
         cursorCtx.setTransform(
-            pixelRatio,
+            dpr,
             0,
             0,
-            pixelRatio,
+            dpr,
             0,
             0
         );
     }
 
 
-    // -----------------------------------------------------
-    // Mouse movement
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Mouse Movement
+       ----------------------------------------------------- */
 
-    window.addEventListener("pointermove", (event) => {
+    window.addEventListener(
+        "pointermove",
+        (event) => {
 
-        mouseX = event.clientX;
-        mouseY = event.clientY;
+            mouseX = event.clientX;
+            mouseY = event.clientY;
 
-        isMouseMoving = true;
+            const movement =
+                Math.hypot(
+                    mouseX - lastMouseX,
+                    mouseY - lastMouseY
+                );
 
-        trail.push({
-            x: mouseX,
-            y: mouseY,
-            time: performance.now()
-        });
+            if (movement > 1) {
 
-        // Keep trail small
-        if (trail.length > CURSOR_CONFIG.trailCount) {
-            trail.shift();
+                isMoving = true;
+
+                lastMovementTime =
+                    performance.now();
+
+                trail.push({
+                    x: mouseX,
+                    y: mouseY,
+                    time: performance.now()
+                });
+
+                if (
+                    trail.length >
+                    CURSOR_CONFIG.trailLength
+                ) {
+                    trail.shift();
+                }
+            }
+
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
         }
-    });
+    );
 
 
-    // -----------------------------------------------------
-    // Mouse click
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Detect when cursor becomes still
+       ----------------------------------------------------- */
 
-    window.addEventListener("pointerdown", () => {
-        mouseDown = true;
-    });
+    function updateMovementState(time) {
 
-    window.addEventListener("pointerup", () => {
-        mouseDown = false;
-    });
-
-
-    // -----------------------------------------------------
-    // Mouse leave
-    // -----------------------------------------------------
-
-    document.addEventListener("mouseleave", () => {
-        isMouseMoving = false;
-    });
-
-    document.addEventListener("mouseenter", () => {
-        isMouseMoving = true;
-    });
+        if (
+            time - lastMovementTime >
+            100
+        ) {
+            isMoving = false;
+        }
+    }
 
 
-    // -----------------------------------------------------
-    // Draw comet trail
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Draw Minimal Trail
+       ----------------------------------------------------- */
 
-    function drawCursorTrail(time) {
+    function drawTrail(time) {
 
         if (trail.length < 2) return;
 
-        for (let i = 1; i < trail.length; i++) {
+        for (
+            let i = 1;
+            i < trail.length;
+            i++
+        ) {
 
-            const current = trail[i];
-            const previous = trail[i - 1];
+            const current =
+                trail[i];
 
-            const progress = i / trail.length;
+            const previous =
+                trail[i - 1];
 
-            const age = time - current.time;
+            const age =
+                time - current.time;
 
-            const life = Math.max(
-                0,
-                1 - age / CURSOR_CONFIG.trailLife
-            );
+            const life =
+                Math.max(
+                    0,
+                    1 -
+                    age /
+                    CURSOR_CONFIG.trailLife
+                );
 
-            const opacity = progress * life * 0.65;
+            if (life <= 0) continue;
 
-            if (opacity <= 0) continue;
+            const progress =
+                i / trail.length;
 
-            const lineWidth =
-                CURSOR_CONFIG.trailSize *
+            const opacity =
                 progress *
-                life;
+                life *
+                0.45;
 
             cursorCtx.beginPath();
 
@@ -672,161 +702,35 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
             );
 
             cursorCtx.strokeStyle =
-                `rgba(150, 220, 255, ${opacity})`;
+                `rgba(160, 205, 255, ${opacity})`;
 
-            cursorCtx.lineWidth = Math.max(
-                lineWidth,
-                0.4
-            );
+            cursorCtx.lineWidth =
+                1.2 * progress;
 
-            cursorCtx.lineCap = "round";
-
-            cursorCtx.shadowBlur = 10;
-
-            cursorCtx.shadowColor =
-                CURSOR_CONFIG.glow;
+            cursorCtx.lineCap =
+                "round";
 
             cursorCtx.stroke();
         }
-
-        cursorCtx.shadowBlur = 0;
     }
 
 
-    // -----------------------------------------------------
-    // Draw tiny stars inside trail
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Draw Normal Cursor
+       ----------------------------------------------------- */
 
-    function drawTrailStars(time) {
+    function drawNormalCursor() {
 
-        for (let i = 0; i < trail.length; i++) {
-
-            const point = trail[i];
-
-            const age = time - point.time;
-
-            const life = Math.max(
-                0,
-                1 - age / CURSOR_CONFIG.trailLife
-            );
-
-            if (life <= 0) continue;
-
-            // Only some points become stars
-            if (i % 3 !== 0) continue;
-
-            const size =
-                0.8 +
-                Math.sin(time * 0.008 + i) * 0.4;
-
-            cursorCtx.beginPath();
-
-            cursorCtx.arc(
-                point.x,
-                point.y,
-                size,
-                0,
-                Math.PI * 2
-            );
-
-            cursorCtx.fillStyle =
-                `rgba(220, 240, 255, ${life * 0.8})`;
-
-            cursorCtx.shadowBlur = 8;
-
-            cursorCtx.shadowColor =
-                CURSOR_CONFIG.glow;
-
-            cursorCtx.fill();
-        }
-
-        cursorCtx.shadowBlur = 0;
-    }
-
-
-    // -----------------------------------------------------
-    // Draw astronomy cursor
-    // -----------------------------------------------------
-
-    function drawAstronomyCursor(time) {
-
-        if (!isMouseMoving) return;
-
-        const targetSize =
-            mouseDown
-                ? CURSOR_CONFIG.cursorSize * 0.78
-                : CURSOR_CONFIG.cursorSize;
-
-        const pulse =
-            Math.sin(time * 0.004) * 1.5;
-
-        const radius =
-            targetSize / 2 + pulse;
-
-
-        // ---------------------------------------------
-        // Outer orbital ring
-        // ---------------------------------------------
-
-        cursorCtx.save();
-
-        cursorCtx.translate(
-            cursorX,
-            cursorY
-        );
-
-        cursorCtx.rotate(
-            time * 0.0007
-        );
-
-        cursorCtx.beginPath();
-
-        cursorCtx.ellipse(
-            0,
-            0,
-            radius * 1.55,
-            radius * 0.58,
-            0,
-            0,
-            Math.PI * 2
-        );
-
-        cursorCtx.strokeStyle =
-            `rgba(180, 220, 255, 0.75)`;
-
-        cursorCtx.lineWidth = 1;
-
-        cursorCtx.shadowBlur = 10;
-
-        cursorCtx.shadowColor =
-            CURSOR_CONFIG.glow;
-
-        cursorCtx.stroke();
-
-
-        // ---------------------------------------------
-        // Small orbital planet
-        // ---------------------------------------------
-
-        const planetAngle =
-            time * 0.0025;
-
-        const planetX =
-            Math.cos(planetAngle) *
-            radius *
-            1.55;
-
-        const planetY =
-            Math.sin(planetAngle) *
-            radius *
-            0.58;
+        /*
+         * Small central point
+         */
 
         cursorCtx.beginPath();
 
         cursorCtx.arc(
-            planetX,
-            planetY,
-            2.2,
+            cursorX,
+            cursorY,
+            CURSOR_CONFIG.size,
             0,
             Math.PI * 2
         );
@@ -834,157 +738,97 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
         cursorCtx.fillStyle =
             CURSOR_CONFIG.color;
 
-        cursorCtx.shadowBlur = 12;
-
-        cursorCtx.shadowColor =
-            CURSOR_CONFIG.glow;
-
         cursorCtx.fill();
 
-        cursorCtx.restore();
 
-
-        // ---------------------------------------------
-        // Stellar core glow
-        // ---------------------------------------------
-
-        const glowRadius =
-            radius * 1.35;
-
-        const glow =
-            cursorCtx.createRadialGradient(
-                cursorX,
-                cursorY,
-                0,
-                cursorX,
-                cursorY,
-                glowRadius
-            );
-
-        glow.addColorStop(
-            0,
-            "rgba(230, 245, 255, 0.95)"
-        );
-
-        glow.addColorStop(
-            0.25,
-            "rgba(160, 215, 255, 0.65)"
-        );
-
-        glow.addColorStop(
-            0.6,
-            "rgba(100, 180, 255, 0.15)"
-        );
-
-        glow.addColorStop(
-            1,
-            "rgba(100, 180, 255, 0)"
-        );
+        /*
+         * Very subtle outer ring
+         */
 
         cursorCtx.beginPath();
 
         cursorCtx.arc(
             cursorX,
             cursorY,
-            glowRadius,
+            CURSOR_CONFIG.ringSize,
             0,
             Math.PI * 2
         );
 
-        cursorCtx.fillStyle = glow;
+        cursorCtx.strokeStyle =
+            CURSOR_CONFIG.ringColor;
 
-        cursorCtx.fill();
+        cursorCtx.lineWidth =
+            0.8;
 
-
-        // ---------------------------------------------
-        // Bright stellar center
-        // ---------------------------------------------
-
-        cursorCtx.beginPath();
-
-        cursorCtx.arc(
-            cursorX,
-            cursorY,
-            radius * 0.25,
-            0,
-            Math.PI * 2
-        );
-
-        cursorCtx.fillStyle =
-            "#f4fbff";
-
-        cursorCtx.shadowBlur = 18;
-
-        cursorCtx.shadowColor =
-            CURSOR_CONFIG.glow;
-
-        cursorCtx.fill();
-
-
-        // ---------------------------------------------
-        // Four-point star flare
-        // ---------------------------------------------
-
-        cursorCtx.beginPath();
-
-        cursorCtx.moveTo(
-            cursorX,
-            cursorY - radius * 0.8
-        );
-
-        cursorCtx.lineTo(
-            cursorX + 0.8,
-            cursorY - 0.8
-        );
-
-        cursorCtx.lineTo(
-            cursorX + radius * 0.8,
-            cursorY
-        );
-
-        cursorCtx.lineTo(
-            cursorX + 0.8,
-            cursorY + 0.8
-        );
-
-        cursorCtx.lineTo(
-            cursorX,
-            cursorY + radius * 0.8
-        );
-
-        cursorCtx.lineTo(
-            cursorX - 0.8,
-            cursorY + 0.8
-        );
-
-        cursorCtx.lineTo(
-            cursorX - radius * 0.8,
-            cursorY
-        );
-
-        cursorCtx.lineTo(
-            cursorX - 0.8,
-            cursorY - 0.8
-        );
-
-        cursorCtx.closePath();
-
-        cursorCtx.fillStyle =
-            "rgba(240, 250, 255, 0.9)";
-
-        cursorCtx.fill();
-
-        cursorCtx.shadowBlur = 0;
+        cursorCtx.stroke();
     }
 
 
-    // -----------------------------------------------------
-    // Animation
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Draw Moving Cursor
+       ----------------------------------------------------- */
 
-    function animateAstronomyCursor(time) {
+    function drawMovingCursor(time) {
 
-        // Smooth cursor movement
+        /*
+         * Main point
+         */
+
+        cursorCtx.beginPath();
+
+        cursorCtx.arc(
+            cursorX,
+            cursorY,
+            CURSOR_CONFIG.size,
+            0,
+            Math.PI * 2
+        );
+
+        cursorCtx.fillStyle =
+            CURSOR_CONFIG.color;
+
+        cursorCtx.fill();
+
+
+        /*
+         * Slightly expanded ring
+         */
+
+        const pulse =
+            Math.sin(time * 0.006) * 1.2;
+
+        cursorCtx.beginPath();
+
+        cursorCtx.arc(
+            cursorX,
+            cursorY,
+            CURSOR_CONFIG.ringSize +
+            pulse,
+            0,
+            Math.PI * 2
+        );
+
+        cursorCtx.strokeStyle =
+            "rgba(180, 220, 255, 0.75)";
+
+        cursorCtx.lineWidth =
+            0.8;
+
+        cursorCtx.stroke();
+    }
+
+
+    /* -----------------------------------------------------
+       Animation
+       ----------------------------------------------------- */
+
+    function animateCursor(time) {
+
+        /*
+         * Smooth movement
+         */
+
         cursorX +=
             (mouseX - cursorX) *
             CURSOR_CONFIG.smoothness;
@@ -994,7 +838,17 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
             CURSOR_CONFIG.smoothness;
 
 
-        // Clear
+        /*
+         * Check movement
+         */
+
+        updateMovementState(time);
+
+
+        /*
+         * Clear canvas
+         */
+
         cursorCtx.clearRect(
             0,
             0,
@@ -1003,9 +857,12 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
         );
 
 
-        // Remove old trail points
+        /*
+         * Remove old trail points
+         */
+
         while (
-            trail.length > 0 &&
+            trail.length &&
             time - trail[0].time >
                 CURSOR_CONFIG.trailLife
         ) {
@@ -1013,35 +870,56 @@ if (CURSOR_CONFIG.enabled && !("ontouchstart" in window)) {
         }
 
 
-        // Draw
-        drawCursorTrail(time);
-        drawTrailStars(time);
-        drawAstronomyCursor(time);
+        /*
+         * Only show trail while moving
+         */
+
+        if (isMoving) {
+            drawTrail(time);
+        }
+
+
+        /*
+         * Cursor appearance
+         */
+
+        if (isMoving) {
+
+            drawMovingCursor(time);
+
+        } else {
+
+            drawNormalCursor();
+
+        }
 
 
         requestAnimationFrame(
-            animateAstronomyCursor
+            animateCursor
         );
     }
 
 
-    // -----------------------------------------------------
-    // Start
-    // -----------------------------------------------------
+    /* -----------------------------------------------------
+       Start
+       ----------------------------------------------------- */
 
-    resizeAstronomyCursor();
+    resizeCursor();
 
     window.addEventListener(
         "resize",
-        resizeAstronomyCursor
+        resizeCursor
     );
 
     requestAnimationFrame(
-        animateAstronomyCursor
+        animateCursor
     );
 }
 
 
 /* =========================================================
-   END ASTRONOMY CURSOR
+   END MINIMAL ASTRONOMY CURSOR
    ========================================================= */
+
+
+
