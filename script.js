@@ -479,106 +479,145 @@ window.addEventListener("pointerleave", () => {
 resize();
 requestAnimationFrame(animate);
 
+
+
 /* =========================================================
-   MINIMAL ASTRONOMY CURSOR
+   MINIMAL BLACK HOLE CURSOR
    ========================================================= */
 
-const CURSOR_CONFIG = {
+const BLACK_HOLE_CURSOR = {
+
     enabled: true,
 
-    // Main appearance
-    color: "#dcecff",
-    ringColor: "rgba(180, 215, 255, 0.65)",
-    trailColor: "rgba(160, 205, 255, 0.35)",
-
-    // Cursor size
+    // Main size
     size: 5,
-    ringSize: 11,
 
-    // Trail
-    trailLength: 12,
-    trailLife: 280,
+    // Accretion ring
+    ringSize: 9,
 
-    // Movement smoothing
-    smoothness: 0.18
+    // Colors
+    ringColor: "rgba(190, 215, 255, 0.65)",
+    glowColor: "rgba(100, 150, 255, 0.18)",
+
+    // Comet trail
+    trailLength: 10,
+    trailLife: 260,
+
+    // Cursor smoothing
+    smoothness: 0.20,
+
+    // When hovering text
+    textSize: 2.5,
+    textRingSize: 5,
+
+    // How transparent cursor becomes over text
+    textOpacity: 0.38
 };
 
 
 if (
-    CURSOR_CONFIG.enabled &&
+    BLACK_HOLE_CURSOR.enabled &&
     !("ontouchstart" in window)
 ) {
 
     /* -----------------------------------------------------
-       Cursor Canvas
+       CREATE CURSOR CANVAS
        ----------------------------------------------------- */
 
-    const cursorCanvas = document.createElement("canvas");
+    const blackHoleCanvas =
+        document.createElement("canvas");
 
-    cursorCanvas.id = "minimal-astronomy-cursor";
+    blackHoleCanvas.id =
+        "minimal-black-hole-cursor";
 
-    Object.assign(cursorCanvas.style, {
-        position: "fixed",
-        inset: "0",
-        width: "100vw",
-        height: "100vh",
-        pointerEvents: "none",
-        zIndex: "999999"
-    });
+    Object.assign(
+        blackHoleCanvas.style,
+        {
+            position: "fixed",
+            inset: "0",
+            width: "100vw",
+            height: "100vh",
+            pointerEvents: "none",
+            zIndex: "999999"
+        }
+    );
 
-    document.body.appendChild(cursorCanvas);
+    document.body.appendChild(
+        blackHoleCanvas
+    );
 
-    const cursorCtx =
-        cursorCanvas.getContext("2d");
+    const blackHoleCtx =
+        blackHoleCanvas.getContext("2d");
 
 
     /* -----------------------------------------------------
-       Cursor State
+       CURSOR STATE
        ----------------------------------------------------- */
 
-    let cursorWidth = window.innerWidth;
-    let cursorHeight = window.innerHeight;
+    let width =
+        window.innerWidth;
 
-    let mouseX = cursorWidth / 2;
-    let mouseY = cursorHeight / 2;
+    let height =
+        window.innerHeight;
 
-    let cursorX = mouseX;
-    let cursorY = mouseY;
+    let mouseX =
+        width / 2;
 
-    let lastMouseX = mouseX;
-    let lastMouseY = mouseY;
+    let mouseY =
+        height / 2;
 
-    let isMoving = false;
-    let lastMovementTime = 0;
+    let cursorX =
+        mouseX;
+
+    let cursorY =
+        mouseY;
+
+    let lastX =
+        mouseX;
+
+    let lastY =
+        mouseY;
+
+    let lastMoveTime = 0;
+
+    let moving = false;
+
+    let overText = false;
 
     const trail = [];
 
 
     /* -----------------------------------------------------
-       Resize
+       RESIZE
        ----------------------------------------------------- */
 
-    function resizeCursor() {
+    function resizeBlackHoleCursor() {
 
-        cursorWidth = window.innerWidth;
-        cursorHeight = window.innerHeight;
+        width =
+            window.innerWidth;
+
+        height =
+            window.innerHeight;
 
         const dpr =
-            Math.min(window.devicePixelRatio || 1, 2);
+            Math.min(
+                window.devicePixelRatio || 1,
+                2
+            );
 
-        cursorCanvas.width =
-            cursorWidth * dpr;
+        blackHoleCanvas.width =
+            width * dpr;
 
-        cursorCanvas.height =
-            cursorHeight * dpr;
+        blackHoleCanvas.height =
+            height * dpr;
 
-        cursorCanvas.style.width =
-            `${cursorWidth}px`;
+        blackHoleCanvas.style.width =
+            `${width}px`;
 
-        cursorCanvas.style.height =
-            `${cursorHeight}px`;
+        blackHoleCanvas.style.height =
+            `${height}px`;
 
-        cursorCtx.setTransform(
+        blackHoleCtx.setTransform(
             dpr,
             0,
             0,
@@ -590,27 +629,98 @@ if (
 
 
     /* -----------------------------------------------------
-       Mouse Movement
+       CHECK IF CURSOR IS OVER TEXT
+       ----------------------------------------------------- */
+
+    function checkIfOverText(element) {
+
+        if (!element) {
+            return false;
+        }
+
+        const tag =
+            element.tagName;
+
+        /*
+         * Elements where the cursor should
+         * become smaller / transparent.
+         */
+
+        const textTags = [
+            "P",
+            "SPAN",
+            "A",
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+            "LI",
+            "LABEL",
+            "SMALL",
+            "STRONG",
+            "EM",
+            "B",
+            "I",
+            "BUTTON"
+        ];
+
+        if (
+            textTags.includes(tag)
+        ) {
+            return true;
+        }
+
+        /*
+         * Also detect elements whose
+         * CSS cursor is text.
+         */
+
+        try {
+
+            const style =
+                window.getComputedStyle(
+                    element
+                );
+
+            if (
+                style.cursor === "text"
+            ) {
+                return true;
+            }
+
+        } catch (error) {}
+
+        return false;
+    }
+
+
+    /* -----------------------------------------------------
+       MOUSE MOVEMENT
        ----------------------------------------------------- */
 
     window.addEventListener(
         "pointermove",
         (event) => {
 
-            mouseX = event.clientX;
-            mouseY = event.clientY;
+            mouseX =
+                event.clientX;
 
-            const movement =
+            mouseY =
+                event.clientY;
+
+            const distance =
                 Math.hypot(
-                    mouseX - lastMouseX,
-                    mouseY - lastMouseY
+                    mouseX - lastX,
+                    mouseY - lastY
                 );
 
-            if (movement > 1) {
+            if (distance > 1) {
 
-                isMoving = true;
+                moving = true;
 
-                lastMovementTime =
+                lastMoveTime =
                     performance.now();
 
                 trail.push({
@@ -621,40 +731,59 @@ if (
 
                 if (
                     trail.length >
-                    CURSOR_CONFIG.trailLength
+                    BLACK_HOLE_CURSOR.trailLength
                 ) {
+
                     trail.shift();
                 }
             }
 
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
+            /*
+             * Detect text underneath
+             */
+
+            overText =
+                checkIfOverText(
+                    event.target
+                );
+
+            lastX =
+                mouseX;
+
+            lastY =
+                mouseY;
         }
     );
 
 
     /* -----------------------------------------------------
-       Detect when cursor becomes still
+       DETECT WHEN CURSOR STOPS
        ----------------------------------------------------- */
 
-    function updateMovementState(time) {
+    function updateMovement(time) {
 
         if (
-            time - lastMovementTime >
+            time - lastMoveTime >
             100
         ) {
-            isMoving = false;
+
+            moving = false;
         }
     }
 
 
     /* -----------------------------------------------------
-       Draw Minimal Trail
+       DRAW TRAIL
        ----------------------------------------------------- */
 
     function drawTrail(time) {
 
-        if (trail.length < 2) return;
+        if (
+            trail.length < 2 ||
+            overText
+        ) {
+            return;
+        }
 
         for (
             let i = 1;
@@ -669,161 +798,223 @@ if (
                 trail[i - 1];
 
             const age =
-                time - current.time;
+                time -
+                current.time;
 
             const life =
                 Math.max(
                     0,
                     1 -
                     age /
-                    CURSOR_CONFIG.trailLife
+                    BLACK_HOLE_CURSOR.trailLife
                 );
 
-            if (life <= 0) continue;
+            if (life <= 0) {
+                continue;
+            }
 
             const progress =
-                i / trail.length;
+                i /
+                trail.length;
 
             const opacity =
                 progress *
                 life *
-                0.45;
+                0.35;
 
-            cursorCtx.beginPath();
+            blackHoleCtx.beginPath();
 
-            cursorCtx.moveTo(
+            blackHoleCtx.moveTo(
                 previous.x,
                 previous.y
             );
 
-            cursorCtx.lineTo(
+            blackHoleCtx.lineTo(
                 current.x,
                 current.y
             );
 
-            cursorCtx.strokeStyle =
-                `rgba(160, 205, 255, ${opacity})`;
+            blackHoleCtx.strokeStyle =
+                `rgba(150, 190, 255, ${opacity})`;
 
-            cursorCtx.lineWidth =
-                1.2 * progress;
+            blackHoleCtx.lineWidth =
+                1 *
+                progress;
 
-            cursorCtx.lineCap =
+            blackHoleCtx.lineCap =
                 "round";
 
-            cursorCtx.stroke();
+            blackHoleCtx.stroke();
         }
     }
 
 
     /* -----------------------------------------------------
-       Draw Normal Cursor
+       DRAW BLACK HOLE
        ----------------------------------------------------- */
 
-    function drawNormalCursor() {
+    function drawBlackHole(time) {
 
         /*
-         * Small central point
+         * Smaller cursor over text
          */
 
-        cursorCtx.beginPath();
+        const size =
+            overText
+                ? BLACK_HOLE_CURSOR.textSize
+                : BLACK_HOLE_CURSOR.size;
 
-        cursorCtx.arc(
+        const ringSize =
+            overText
+                ? BLACK_HOLE_CURSOR.textRingSize
+                : BLACK_HOLE_CURSOR.ringSize;
+
+        const opacity =
+            overText
+                ? BLACK_HOLE_CURSOR.textOpacity
+                : 1;
+
+
+        /* ---------------------------------------------
+           Very subtle outer glow
+           --------------------------------------------- */
+
+        if (!overText) {
+
+            const glow =
+                blackHoleCtx.createRadialGradient(
+                    cursorX,
+                    cursorY,
+                    0,
+                    cursorX,
+                    cursorY,
+                    ringSize * 2
+                );
+
+            glow.addColorStop(
+                0,
+                BLACK_HOLE_CURSOR.glowColor
+            );
+
+            glow.addColorStop(
+                1,
+                "rgba(0,0,0,0)"
+            );
+
+            blackHoleCtx.beginPath();
+
+            blackHoleCtx.arc(
+                cursorX,
+                cursorY,
+                ringSize * 2,
+                0,
+                Math.PI * 2
+            );
+
+            blackHoleCtx.fillStyle =
+                glow;
+
+            blackHoleCtx.fill();
+        }
+
+
+        /* ---------------------------------------------
+           Accretion ring
+           --------------------------------------------- */
+
+        const rotation =
+            time * 0.0008;
+
+        blackHoleCtx.save();
+
+        blackHoleCtx.translate(
             cursorX,
-            cursorY,
-            CURSOR_CONFIG.size,
+            cursorY
+        );
+
+        blackHoleCtx.rotate(
+            rotation
+        );
+
+        blackHoleCtx.beginPath();
+
+        blackHoleCtx.ellipse(
+            0,
+            0,
+            ringSize,
+            ringSize * 0.42,
+            0,
             0,
             Math.PI * 2
         );
 
-        cursorCtx.fillStyle =
-            CURSOR_CONFIG.color;
+        blackHoleCtx.strokeStyle =
+            `rgba(190, 215, 255, ${0.65 * opacity})`;
 
-        cursorCtx.fill();
+        blackHoleCtx.lineWidth =
+            overText
+                ? 0.6
+                : 1;
+
+        blackHoleCtx.stroke();
+
+        blackHoleCtx.restore();
 
 
-        /*
-         * Very subtle outer ring
-         */
+        /* ---------------------------------------------
+           Black hole center
+           --------------------------------------------- */
 
-        cursorCtx.beginPath();
+        blackHoleCtx.beginPath();
 
-        cursorCtx.arc(
+        blackHoleCtx.arc(
             cursorX,
             cursorY,
-            CURSOR_CONFIG.ringSize,
+            size,
             0,
             Math.PI * 2
         );
 
-        cursorCtx.strokeStyle =
-            CURSOR_CONFIG.ringColor;
+        blackHoleCtx.fillStyle =
+            `rgba(0, 0, 0, ${opacity})`;
 
-        cursorCtx.lineWidth =
-            0.8;
+        blackHoleCtx.fill();
 
-        cursorCtx.stroke();
+
+        /* ---------------------------------------------
+           Tiny highlight
+           --------------------------------------------- */
+
+        if (!overText) {
+
+            blackHoleCtx.beginPath();
+
+            blackHoleCtx.arc(
+                cursorX -
+                size * 0.35,
+
+                cursorY -
+                size * 0.35,
+
+                0.8,
+
+                0,
+                Math.PI * 2
+            );
+
+            blackHoleCtx.fillStyle =
+                "rgba(235, 245, 255, 0.75)";
+
+            blackHoleCtx.fill();
+        }
     }
 
 
     /* -----------------------------------------------------
-       Draw Moving Cursor
+       ANIMATION
        ----------------------------------------------------- */
 
-    function drawMovingCursor(time) {
-
-        /*
-         * Main point
-         */
-
-        cursorCtx.beginPath();
-
-        cursorCtx.arc(
-            cursorX,
-            cursorY,
-            CURSOR_CONFIG.size,
-            0,
-            Math.PI * 2
-        );
-
-        cursorCtx.fillStyle =
-            CURSOR_CONFIG.color;
-
-        cursorCtx.fill();
-
-
-        /*
-         * Slightly expanded ring
-         */
-
-        const pulse =
-            Math.sin(time * 0.006) * 1.2;
-
-        cursorCtx.beginPath();
-
-        cursorCtx.arc(
-            cursorX,
-            cursorY,
-            CURSOR_CONFIG.ringSize +
-            pulse,
-            0,
-            Math.PI * 2
-        );
-
-        cursorCtx.strokeStyle =
-            "rgba(180, 220, 255, 0.75)";
-
-        cursorCtx.lineWidth =
-            0.8;
-
-        cursorCtx.stroke();
-    }
-
-
-    /* -----------------------------------------------------
-       Animation
-       ----------------------------------------------------- */
-
-    function animateCursor(time) {
+    function animateBlackHole(time) {
 
         /*
          * Smooth movement
@@ -831,95 +1022,86 @@ if (
 
         cursorX +=
             (mouseX - cursorX) *
-            CURSOR_CONFIG.smoothness;
+            BLACK_HOLE_CURSOR.smoothness;
 
         cursorY +=
             (mouseY - cursorY) *
-            CURSOR_CONFIG.smoothness;
+            BLACK_HOLE_CURSOR.smoothness;
 
 
         /*
-         * Check movement
+         * Update movement
          */
 
-        updateMovementState(time);
+        updateMovement(time);
 
 
         /*
          * Clear canvas
          */
 
-        cursorCtx.clearRect(
+        blackHoleCtx.clearRect(
             0,
             0,
-            cursorWidth,
-            cursorHeight
+            width,
+            height
         );
 
 
         /*
-         * Remove old trail points
+         * Remove expired trail
          */
 
         while (
             trail.length &&
-            time - trail[0].time >
-                CURSOR_CONFIG.trailLife
+            time -
+            trail[0].time >
+            BLACK_HOLE_CURSOR.trailLife
         ) {
+
             trail.shift();
         }
 
 
         /*
-         * Only show trail while moving
+         * Trail only while moving
          */
 
-        if (isMoving) {
+        if (moving) {
             drawTrail(time);
         }
 
 
         /*
-         * Cursor appearance
+         * Cursor
          */
 
-        if (isMoving) {
-
-            drawMovingCursor(time);
-
-        } else {
-
-            drawNormalCursor();
-
-        }
+        drawBlackHole(time);
 
 
         requestAnimationFrame(
-            animateCursor
+            animateBlackHole
         );
     }
 
 
     /* -----------------------------------------------------
-       Start
+       START
        ----------------------------------------------------- */
 
-    resizeCursor();
+    resizeBlackHoleCursor();
 
     window.addEventListener(
         "resize",
-        resizeCursor
+        resizeBlackHoleCursor
     );
 
     requestAnimationFrame(
-        animateCursor
+        animateBlackHole
     );
 }
 
 
 /* =========================================================
-   END MINIMAL ASTRONOMY CURSOR
+   END MINIMAL BLACK HOLE CURSOR
    ========================================================= */
-
-
-
