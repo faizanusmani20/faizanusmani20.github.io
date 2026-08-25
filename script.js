@@ -475,3 +475,101 @@ window.addEventListener("pointerleave", () => {
 
 resize();
 requestAnimationFrame(animate);
+
+
+/* --------------------------- CURSOR COMET TRAIL --------------------------- */
+/**
+ * Turns the user's actual mouse/touch movement into a comet: a short-lived
+ * trail of points, drawn as a tapering, glowing streak that fades out
+ * behind the cursor, plus a bright head with a soft flare.
+ */
+
+const cursorTrailConfig = {
+  maxPoints: 26, // how long the trail can get
+  pointLifetime: 420, // ms a single point stays visible
+  minDistance: 2, // px the cursor must move before adding a new point
+  headSize: 2.6,
+  hue: 200
+};
+
+function addCursorPoint(x, y) {
+  const last = cursorTrail[cursorTrail.length - 1];
+  if (last) {
+    const dx = x - last.x;
+    const dy = y - last.y;
+    if (Math.sqrt(dx * dx + dy * dy) < cursorTrailConfig.minDistance) return;
+  }
+
+  cursorTrail.push({ x, y, born: performance.now() });
+
+  if (cursorTrail.length > cursorTrailConfig.maxPoints) {
+    cursorTrail.shift();
+  }
+}
+
+function updateCursorTrail(now) {
+  while (
+    cursorTrail.length &&
+    now - cursorTrail[0].born > cursorTrailConfig.pointLifetime
+  ) {
+    cursorTrail.shift();
+  }
+}
+
+function drawCursorTrail(now) {
+  if (cursorTrail.length < 2) return;
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (let i = 1; i < cursorTrail.length; i++) {
+    const p0 = cursorTrail[i - 1];
+    const p1 = cursorTrail[i];
+
+    const age = (now - p1.born) / cursorTrailConfig.pointLifetime;
+    const life = clamp(1 - age, 0, 1);
+
+    // taper: older segments (closer to index 0) are thinner and dimmer
+    const t = i / cursorTrail.length;
+    const width_ = cursorTrailConfig.headSize * t * life;
+    const alpha = 0.75 * t * life;
+
+    if (width_ <= 0.05 || alpha <= 0.02) continue;
+
+    const grad = ctx.createLinearGradient(p0.x, p0.y, p1.x, p1.y);
+    grad.addColorStop(0, `hsla(${cursorTrailConfig.hue}, 95%, 80%, ${alpha * 0.4})`);
+    grad.addColorStop(1, `hsla(${cursorTrailConfig.hue}, 100%, 90%, ${alpha})`);
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = width_;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+  }
+
+  // bright glowing head at the cursor's live position
+  if (cursor.active) {
+    const headGlow = ctx.createRadialGradient(
+      cursor.x, cursor.y, 0,
+      cursor.x, cursor.y, cursorTrailConfig.headSize * 7
+    );
+    headGlow.addColorStop(0, `hsla(${cursorTrailConfig.hue}, 100%, 90%, 0.55)`);
+    headGlow.addColorStop(1, "hsla(0, 0%, 0%, 0)");
+    ctx.fillStyle = headGlow;
+    ctx.beginPath();
+    ctx.arc(cursor.x, cursor.y, cursorTrailConfig.headSize * 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowBlur = 16;
+    ctx.shadowColor = `hsla(${cursorTrailConfig.hue}, 100%, 85%, 1)`;
+    ctx.beginPath();
+    ctx.arc(cursor.x, cursor.y, cursorTrailConfig.headSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.restore();
+}
